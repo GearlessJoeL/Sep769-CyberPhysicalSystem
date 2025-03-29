@@ -64,8 +64,20 @@ try:
     face_thread.join()
     
     if face_success or rfid_success:
+        js = {
+            "state" : 1,
+            "type" : "",
+            "time" : time.time(),
+            "name" : ""
+        }
         print("The door will lock in 5 seconds!")
-        print(face.name)
+        if face_success:
+            js["type"] = "face"
+            js["name"] = face.name
+        if rfid_success:
+            js["type"] = "rfid"
+            js["name"] = "Key"
+        print(js)
         time.sleep(5)
         face.clear_name()
         servo_control.lock()
