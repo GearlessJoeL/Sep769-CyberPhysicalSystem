@@ -67,6 +67,7 @@ try:
         print("The door will lock in 5 seconds!")
         print(face.name)
         time.sleep(5)
+        face.clear_name()
         servo_control.lock()
         time.sleep(0.1)
         print("The door has been locked!")

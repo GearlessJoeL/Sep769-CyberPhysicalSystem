@@ -64,6 +64,10 @@ class FaceRecognition:
     def recognize(self):
         hl = HuskyLensLibrary("SERIAL", "/dev/ttyUSB1", 3000000)
         self.name = parse_recognition_result(hl.learnedBlocks())
+    def get_name(self):
+        return self.name
+    def clear_name(self):
+        self.name = ""
 
 
 def printMenu():
