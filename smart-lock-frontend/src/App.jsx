@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import LiveVideo from './components/LiveVideo';
+import RecognitionResult from './components/RecognitionResult';
 import FacialRecognition from './components/FacialRecognition';
 import FingerPrint from './components/FingerPrint';
 import NFCReader from './components/NFCReader';
@@ -26,7 +26,7 @@ function App() {
 
         <div className="grid">
           <div className="video-container">
-            <LiveVideo />
+            <RecognitionResult />
             <FacialRecognition />
           </div>
 

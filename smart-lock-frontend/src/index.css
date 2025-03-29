@@ -319,3 +319,56 @@ video {
   overflow-y: auto;
 }
 
+.recognition-result {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.recognition-result h2 {
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.result-card {
+  padding: 1.5rem;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+}
+
+.result-card.success {
+  border-left: 4px solid var(--success-color);
+}
+
+.result-card.failure {
+  border-left: 4px solid var(--danger-color);
+}
+
+.result-card p {
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.result-card .status {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.result-card .success .status {
+  color: var(--success-color);
+}
+
+.result-card .failure .status {
+  color: var(--danger-color);
+}
+
+.result-card .type,
+.result-card .name,
+.result-card .time {
+  color: #4b5563;
+}
+

@@ -5,6 +5,8 @@
   "main": "src/index.jsx",
   "scripts": {
     "start": "NODE_OPTIONS='--openssl-legacy-provider' react-scripts start",
+    "dev": "NODE_OPTIONS=--openssl-legacy-provider react-scripts start",
+    "clean-start": "rm -rf node_modules/.cache && NODE_OPTIONS=--openssl-legacy-provider react-scripts start",
     "build": "NODE_OPTIONS='--openssl-legacy-provider' react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

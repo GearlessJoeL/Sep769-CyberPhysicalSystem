@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useBiometrics } from '../hooks/useBiometrics';
-import LiveVideo from './LiveVideo';
 import Button from './Button';
 
 const FacialRecognition = () => {
@@ -27,19 +26,14 @@ const FacialRecognition = () => {
   return (
     <div className="status-container">
       <h2>Facial Recognition</h2>
-      <div className="video-wrapper">
-        <LiveVideo />
-        {isRecognizing && (
-          <div className="recognition-overlay">
-            <p>Scanning...</p>
-          </div>
-        )}
-      </div>
       <Button
         onClick={handleRecognitionToggle}
         text={isRecognizing ? 'Stop Recognition' : 'Start Recognition'}
         variant={isRecognizing ? 'secondary' : 'primary'}
       />
+      {isRecognizing && (
+        <p className="scanning-status">Scanning...</p>
+      )}
       {recognitionData && (
         <div className={`status-${recognitionData.success ? 'success' : 'error'}`}>
           <h3>Recognition Results:</h3>
