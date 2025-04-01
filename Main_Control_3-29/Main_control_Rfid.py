@@ -43,7 +43,7 @@ def face_authentication():
     print('please face the camera...')
     while not rfid_success and not face_success:  # 循环等待验证
         face.recognize()
-        if face.name != "":
+        if face.get_name() != "":
             led_control.led_success()
             buzzer_control.buzzer_success()
             servo_control.unlock()
@@ -73,7 +73,7 @@ try:
         print("The door will lock in 5 seconds!")
         if face_success:
             js["type"] = "face"
-            js["name"] = face.name
+            js["name"] = face.get_name()
         if rfid_success:
             js["type"] = "rfid"
             js["name"] = "Key"
