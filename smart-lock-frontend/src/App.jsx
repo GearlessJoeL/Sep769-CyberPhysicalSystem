@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
 import RecognitionResult from './components/RecognitionResult';
-import FacialRecognition from './components/FacialRecognition';
-import FingerPrint from './components/FingerPrint';
-import NFCReader from './components/NFCReader';
 import History from './components/History';
 import UnlockButton from './components/UnlockButton';
 import './index.css';
@@ -26,13 +22,22 @@ function App() {
         <UnlockButton />
         <div className="recognitions-container">
           <div className="recognition-section">
-            <NFCReader />
+            <h2>RFID Recognition</h2>
+            <div className="status-display">
+              <RecognitionResult type="rfid" />
+            </div>
           </div>
           <div className="recognition-section">
-            <FacialRecognition />
+            <h2>Face Recognition</h2>
+            <div className="status-display">
+              <RecognitionResult type="face" />
+            </div>
           </div>
           <div className="recognition-section">
-            <FingerPrint />
+            <h2>Fingerprint Recognition</h2>
+            <div className="status-display">
+              <RecognitionResult type="fingerprint" />
+            </div>
           </div>
         </div>
 

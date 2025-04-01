@@ -1,54 +1,44 @@
 import React, { useState, useEffect } from 'react';
+import { usePubNub } from 'pubnub-react';
+import { CHANNEL } from '../index';
 
-const RecognitionResult = () => {
-  const [recognitionData, setRecognitionData] = useState({
-    success: false,
-    type: '',
-    name: '',
-    timestamp: ''
-  });
-  const [loading, setLoading] = useState(false);
+const RecognitionResult = ({ type }) => {
+  const [status, setStatus] = useState(null);
+  const pubnub = usePubNub();
 
   useEffect(() => {
-    const fetchRecognitionData = async () => {
-      try {
-        setLoading(true);
-        // Replace with your actual API endpoint
-        const response = await fetch('http://localhost:5000/api/recognition');
-        const data = await response.json();
-        setRecognitionData(data);
-      } catch (error) {
-        console.error('Error fetching recognition data', error);
-      } finally {
-        setLoading(false);
+    const handleMessage = (event) => {
+      const message = event.message;
+      if (message.type === type) {
+        setStatus({
+          success: message.state === 1,
+          name: message.name,
+          time: message.time
+        });
       }
     };
 
-    // Fetch initially
-    fetchRecognitionData();
+    pubnub.addListener({ message: handleMessage });
 
-    // Set up interval to poll for updates (every 2 seconds)
-    const intervalId = setInterval(fetchRecognitionData, 2000);
-
-    // Cleanup function to clear interval when component unmounts
-    return () => clearInterval(intervalId);
-  }, []);
+    return () => {
+      pubnub.removeListener({ message: handleMessage });
+    };
+  }, [pubnub, type]);
 
   return (
-    <div className="recognition-result">
-      <h2>Recognition Result</h2>
-      {loading ? (
-        <p>Loading...</p>
+    <div className={`status-container ${status?.success ? 'status-success' : 'status-error'}`}>
+      {status ? (
+        <>
+          <div className="status-text">
+            {status.success ? 'Authentication Successful' : 'Waiting for authentication...'}
+          </div>
+          {status.name && <div className="user-name">{status.name}</div>}
+        </>
       ) : (
-        <div className={`result-card ${recognitionData.success ? 'success' : 'failure'}`}>
-          <p className="status">Status: {recognitionData.success ? 'Success' : 'Failed'}</p>
-          {recognitionData.type && <p className="type">Method: {recognitionData.type}</p>}
-          {recognitionData.name && <p className="name">User: {recognitionData.name}</p>}
-          {recognitionData.timestamp && <p className="time">Time: {new Date(recognitionData.timestamp).toLocaleString()}</p>}
-        </div>
+        <div className="status-text">Waiting for authentication...</div>
       )}
     </div>
   );
 };
 
-export default RecognitionResult; 
+export default RecognitionResult;
