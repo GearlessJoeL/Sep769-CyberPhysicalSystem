@@ -32,6 +32,7 @@ face = FaceRecognition()
 
 rfid_success = False
 face_success = False
+face_fail = False
 remote_unlock = False
 
 class MySubscribeCallback(SubscribeCallback):
@@ -92,16 +93,24 @@ def rfid_authentication():
 
 def face_authentication():
     global face_success
+    global face_fail
     print('please face the camera...')
     while not rfid_success and not face_success and not remote_unlock:
         face.recognize()
         if face.get_name() != "":
-            led_control.led_success()
-            buzzer_control.buzzer_success()
-            servo_control.unlock()
-            face_success = True
-            exit_event.set()
-            return
+            if face.get_name() == "Unknown":
+                face_fail = True
+                print("Face recognition failed")
+                led_control.led_failed()
+                buzzer_control.buzzer_failed()
+                face_fail = False
+            else:
+                led_control.led_success()
+                buzzer_control.buzzer_success()
+                servo_control.unlock()
+                face_success = True
+                exit_event.set()
+                return
 
 try:
     rfid_thread = threading.Thread(target=rfid_authentication)
@@ -150,7 +159,14 @@ try:
         
         time.sleep(0.1)
         print("The door has been locked!")
-
+    if face_fail:
+        status_data = {
+            "state": 0,
+            "type": "face",
+            "time": time.time(),
+            "name": "Unknown"
+        }
+        publish_status(status_data)
 except KeyboardInterrupt:
     print('Program interrupted. Cleaning up GPIO settings...')
 

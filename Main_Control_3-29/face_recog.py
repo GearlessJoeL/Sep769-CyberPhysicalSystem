@@ -5,7 +5,15 @@ class FaceRecognition:
         self.name = ""
     def recognize(self):
         hl = HuskyLensLibrary("I2C","", address=0x32)
-        self.name = parse_recognition_result(hl.learnedBlocks())
+        learned_blocks = hl.learnedBlocks()
+        if len(learned_blocks) == 0:
+            blocks = hl.blocks()
+            if len(blocks) == 0:
+                self.name = ""
+            else:
+                self.name = "Unknown"
+        else:
+            self.name = parse_recognition_result(learned_blocks)
     def get_name(self):
         return self.name
     def clear_name(self):
