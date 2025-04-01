@@ -138,13 +138,6 @@ try:
             status_data["name"] = "Unknown"
 
         print("The door will lock in 5 seconds!")
-        if face_success:
-            js["type"] = "face"
-            js["name"] = face.get_name()
-        if rfid_success:
-            js["type"] = "rfid"
-            js["name"] = "Key"
-        print(js)
         time.sleep(5)
         
         face.clear_name()
