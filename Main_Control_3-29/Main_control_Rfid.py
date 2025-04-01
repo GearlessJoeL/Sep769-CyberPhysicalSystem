@@ -123,7 +123,7 @@ try:
 
         if face_success:
             status_data["type"] = "face"
-            status_data["name"] = face.name
+            status_data["name"] = face.get_name
         elif rfid_success:
             status_data["type"] = "rfid"
             status_data["name"] = "Key"
