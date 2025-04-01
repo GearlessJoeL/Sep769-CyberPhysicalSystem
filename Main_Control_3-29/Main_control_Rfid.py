@@ -95,7 +95,7 @@ def face_authentication():
     print('please face the camera...')
     while not rfid_success and not face_success and not remote_unlock:
         face.recognize()
-        if face.name != "":
+        if face.get_name() != "":
             led_control.led_success()
             buzzer_control.buzzer_success()
             servo_control.unlock()
@@ -138,8 +138,13 @@ try:
             status_data["name"] = "Unknown"
 
         print("The door will lock in 5 seconds!")
-        publish_status(status_data)
-        print(status_data)
+        if face_success:
+            js["type"] = "face"
+            js["name"] = face.get_name()
+        if rfid_success:
+            js["type"] = "rfid"
+            js["name"] = "Key"
+        print(js)
         time.sleep(5)
         
         face.clear_name()
