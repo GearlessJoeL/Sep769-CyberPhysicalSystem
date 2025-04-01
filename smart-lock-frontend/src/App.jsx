@@ -15,7 +15,9 @@ function App() {
     <div className={`app-container ${showHistory ? 'with-sidebar' : ''}`}>
       <div className="main-content">
         <div className="header-controls">
-          <UnlockButton />
+          <div className="control-panel">
+            <UnlockButton />
+          </div>
           <button 
             className="button history-button"
             onClick={() => setShowHistory(!showHistory)}

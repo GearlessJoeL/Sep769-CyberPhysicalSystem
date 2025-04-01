@@ -5,55 +5,105 @@ import led_control_v2 as led_control
 import buzzer_control_v3 as buzzer_control
 import servo_control_v2 as servo_control
 import threading
-from rfid_reader_v2 import exit_event  # 从 rfid_reader 模块导入退出事件
+from rfid_reader_v2 import exit_event
 from face_recog import FaceRecognition
+from pubnub.callbacks import SubscribeCallback
+from pubnub.pnconfiguration import PNConfiguration
+from pubnub.pubnub import PubNub
+import json
 
-# 初始化 GPIO 模式
+# PubNub Configuration
+pnconfig = PNConfiguration()
+pnconfig.subscribe_key = 'sub-c-a6797b99-e665-4db1-b0ec-2cb77ad995ed'
+pnconfig.publish_key = 'pub-c-e478cfb1-92ef-4faa-93cc-d1c4022ecb19'
+pnconfig.uuid = '321'
+pubnub = PubNub(pnconfig)
+
+# Channel names
+CONTROL_CHANNEL = "MingyiHUO728"
+STATUS_CHANNEL = "MingyiHUO728"
+
+# Initialize GPIO mode
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
 
-# 初始化模块
+# Initialize modules
 face = FaceRecognition()
 
 rfid_success = False
 face_success = False
+remote_unlock = False
 
+class MySubscribeCallback(SubscribeCallback):
+    def message(self, pubnub, message):
+        global remote_unlock
+        if message.channel == CONTROL_CHANNEL:
+            if message.message.get('message_type') == "control" and message.message.get('action') == 'unlock':
+                remote_unlock = True
+                print("Received remote unlock command")
+                led_control.led_success()
+                buzzer_control.buzzer_success()
+                servo_control.unlock()
+                
+                # Publish status update
+                status_data = {
+                    "message_type": "status",
+                    "state": 1,
+                    "type": "remote",
+                    "time": time.time(),
+                    "name": "Remote Access"
+                }
+                publish_status(status_data)
+                
+                # Auto-lock after 5 seconds
+                time.sleep(5)
+                servo_control.lock()
+                
+                # Update locked status
+                status_data["state"] = 0
+                status_data["time"] = time.time()
+                publish_status(status_data)
+
+pubnub.add_listener(MySubscribeCallback())
+pubnub.subscribe().channels([CONTROL_CHANNEL]).execute()
+
+def publish_status(status_data):
+    status_data["message_type"] = "status"  # Add message type
+    pubnub.publish().channel(STATUS_CHANNEL).message(status_data).sync()
 
 def rfid_authentication():
     global rfid_success
-    while not rfid_success and not face_success:  # 循环等待验证
-        if face_success:  # 如果人脸识别成功，退出 RFID 线程
-            print("检测到人脸识别成功，RFID 线程自动退出。")
-            exit_event.set()  # 设置退出事件
+    while not rfid_success and not face_success and not remote_unlock:
+        if face_success or remote_unlock:
+            print("Face recognition succeeded or remote unlock activated, RFID thread exiting.")
+            exit_event.set()
             return
 
         led_control.led_waiting()
         card_id = rfid_reader.read_rfid()
 
-        if card_id == '860338929300':  # 假定这是授权卡片
-            print('RFID 验证成功')
+        if card_id == '860338929300':
+            print('RFID verification successful')
             led_control.led_success()
             buzzer_control.buzzer_success()
             servo_control.unlock()
             rfid_success = True
-            return  # 停止线程
+            return
 
 def face_authentication():
     global face_success
     print('please face the camera...')
-    while not rfid_success and not face_success:  # 循环等待验证
+    while not rfid_success and not face_success and not remote_unlock:
         face.recognize()
         if face.name != "":
             led_control.led_success()
             buzzer_control.buzzer_success()
             servo_control.unlock()
-            face_success = True  # 更新全局变量
-            exit_event.set()  # 通知 RFID 线程退出                
-            return  # 确保人脸识别线程退出
-
+            face_success = True
+            exit_event.set()
+            return
 
 try:
-    # 创建两个线程同时运行 RFID 和 人脸识别
     rfid_thread = threading.Thread(target=rfid_authentication)
     face_thread = threading.Thread(target=face_authentication)
 
@@ -63,30 +113,49 @@ try:
     rfid_thread.join()
     face_thread.join()
     
-    if face_success or rfid_success:
-        js = {
-            "state" : 1,
-            "type" : "",
-            "time" : time.time(),
-            "name" : ""
+    if face_success or rfid_success or remote_unlock: #or fingerprint_success
+        status_data = {
+            "state": 1,
+            "type": "",
+            "time": time.time(),
+            "name": ""
         }
-        print("The door will lock in 5 seconds!")
+
         if face_success:
-            js["type"] = "face"
-            js["name"] = face.name
-        if rfid_success:
-            js["type"] = "rfid"
-            js["name"] = "Key"
-        print(js)
+            status_data["type"] = "face"
+            status_data["name"] = face.name
+        elif rfid_success:
+            status_data["type"] = "rfid"
+            status_data["name"] = "Key"
+        elif remote_unlock:
+            status_data["type"] = "remote"
+            status_data["name"] = "Remote Access"
+        # elif fingerprint_success:
+        #     status_data["type"] = "fingerprint"
+        #     status_data["name"] = "Fingerprint"
+        else:
+            status_data["type"] = "unknown"
+            status_data["name"] = "Unknown"
+
+        print("The door will lock in 5 seconds!")
+        publish_status(status_data)
+        print(status_data)
         time.sleep(5)
+        
         face.clear_name()
         servo_control.lock()
+        
+        # Publish locked status
+        status_data["state"] = 0
+        status_data["time"] = time.time()
+        publish_status(status_data)
+        
         time.sleep(0.1)
         print("The door has been locked!")
 
-
 except KeyboardInterrupt:
-    print('程序已中断。正在清理 GPIO 设置...')
+    print('Program interrupted. Cleaning up GPIO settings...')
 
 finally:
+    pubnub.unsubscribe().channels([CONTROL_CHANNEL]).execute()
     GPIO.cleanup()
