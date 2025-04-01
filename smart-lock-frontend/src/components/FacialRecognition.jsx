@@ -36,7 +36,7 @@ const FacialRecognition = () => {
       )}
       {recognitionData && (
         <div className={`status-${recognitionData.success ? 'success' : 'error'}`}>
-          <h3>Recognition Results:</h3>
+          <h3>Facial Recognition:</h3>
           <p>{recognitionData.message}</p>
           {recognitionData.matchPercentage && (
             <p className="match-percentage">Match: {recognitionData.matchPercentage}%</p>

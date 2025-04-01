@@ -24,7 +24,7 @@ const History = ({ onClose }) => {
           <Button 
             onClick={fetchLogs}
             text="Refresh"
-            variant="primary"
+            variant="secondary"
             disabled={loading}
           />
           <Button 

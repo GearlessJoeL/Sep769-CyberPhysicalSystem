@@ -12,42 +12,37 @@ function App() {
   const [showHistory, setShowHistory] = useState(false);
 
   return (
-    <div className={`app-container ${showHistory ? 'with-sidebar' : ''}`}>
-      <div className="main-content">
-        <div className="header-controls">
-          <div className="control-panel">
-            <UnlockButton />
-          </div>
-          <button 
-            className="button history-button"
-            onClick={() => setShowHistory(!showHistory)}
-          >
-            {showHistory ? 'Hide History' : 'Show History'}
-          </button>
-        </div>
-
-        <div className="grid">
-          <div className="video-container">
-            <RecognitionResult />
-            <FacialRecognition />
-          </div>
-
-          <div className="status-container">
-            <FingerPrint />
-          </div>
-
-          <div className="status-container">
+    <>
+      <div className="top-bar">
+        <h1 className="project-title">Smart Lock System</h1>
+        <button 
+          className="history-button"
+          onClick={() => setShowHistory(!showHistory)}
+        >
+          {showHistory ? 'Hide History' : 'Show History'}
+        </button>
+      </div>
+      <div className={`app-container ${showHistory ? 'with-sidebar' : ''}`}>
+        <UnlockButton />
+        <div className="recognitions-container">
+          <div className="recognition-section">
             <NFCReader />
           </div>
+          <div className="recognition-section">
+            <FacialRecognition />
+          </div>
+          <div className="recognition-section">
+            <FingerPrint />
+          </div>
         </div>
-      </div>
 
-      {showHistory && (
-        <div className="sidebar">
-          <History onClose={() => setShowHistory(false)} />
-        </div>
-      )}
-    </div>
+        {showHistory && (
+          <div className="sidebar">
+            <History onClose={() => setShowHistory(false)} />
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
