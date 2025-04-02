@@ -97,19 +97,28 @@ def face_authentication():
     print('please face the camera...')
     while not rfid_success and not face_success and not remote_unlock:
         face.recognize()
+        time.sleep(0.5)
         if face.get_name() != "":
             if face.get_name() == "Unknown":
-                face_fail = True
-                print("Face recognition failed")
-                led_control.led_failed()
-                buzzer_control.buzzer_failed()
-                face_fail = False
+                fail_count += 1
+#                 print(fail_count)
+                if fail_count > 4:
+                    status_data = {
+                        "state": 0,
+                        "type": "face",
+                        "time": time.time(),
+                        "name": "Unknown"
+                    }
+                    print("Unknown person detected")
+                    publish_status(status_data)
+                    fail_count = 0
             else:
                 led_control.led_success()
                 buzzer_control.buzzer_success()
                 servo_control.unlock()
                 face_success = True
                 exit_event.set()
+#                 print("ex")
                 return
 
 try:
@@ -159,14 +168,7 @@ try:
         
         time.sleep(0.1)
         print("The door has been locked!")
-    if face_fail:
-        status_data = {
-            "state": 0,
-            "type": "face",
-            "time": time.time(),
-            "name": "Unknown"
-        }
-        publish_status(status_data)
+
 except KeyboardInterrupt:
     print('Program interrupted. Cleaning up GPIO settings...')
 
