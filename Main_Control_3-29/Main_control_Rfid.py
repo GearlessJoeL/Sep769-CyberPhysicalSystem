@@ -32,7 +32,6 @@ face = FaceRecognition()
 
 rfid_success = False
 face_success = False
-face_fail = False
 remote_unlock = False
 
 class MySubscribeCallback(SubscribeCallback):
@@ -93,7 +92,6 @@ def rfid_authentication():
 
 def face_authentication():
     global face_success
-    global face_fail
     print('please face the camera...')
     while not rfid_success and not face_success and not remote_unlock:
         face.recognize()
