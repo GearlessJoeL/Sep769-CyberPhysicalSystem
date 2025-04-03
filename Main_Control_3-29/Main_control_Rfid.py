@@ -4,6 +4,7 @@ import rfid_reader_v2 as rfid_reader
 import led_control_v2 as led_control
 import buzzer_control_v3 as buzzer_control
 import servo_control_v2 as servo_control
+import fingerprint_reader_v2 as fingerprint_reader
 import threading
 from rfid_reader_v2 import exit_event
 from face_recog import FaceRecognition
@@ -32,6 +33,7 @@ face = FaceRecognition()
 
 rfid_success = False
 face_success = False
+fingerprint_success = False
 remote_unlock = False
 
 class MySubscribeCallback(SubscribeCallback):
@@ -73,9 +75,9 @@ def publish_status(status_data):
 
 def rfid_authentication():
     global rfid_success
-    while not rfid_success and not face_success and not remote_unlock:
-        if face_success or remote_unlock:
-            print("Face recognition succeeded or remote unlock activated, RFID thread exiting.")
+    while not rfid_success and not face_success and not remote_unlock and not fingerprint_success:
+        if face_success or remote_unlock or fingerprint_success:
+            print("Face or fingerprint recognition succeeded or remote unlock activated, RFID thread exiting.")
             exit_event.set()
             return
 
@@ -93,7 +95,7 @@ def rfid_authentication():
 def face_authentication():
     global face_success
     print('please face the camera...')
-    while not rfid_success and not face_success and not remote_unlock:
+    while not rfid_success and not face_success and not remote_unlock and not fingerprint_success:
         face.recognize()
         time.sleep(0.5)
         if face.get_name() != "":
@@ -118,6 +120,25 @@ def face_authentication():
                 exit_event.set()
 #                 print("ex")
                 return
+
+def fingerprint_authentication():
+    global fingerprint_success
+    while not fingerprint_success and not rfid_success and not face_success and not remote_unlock: # 循环等待验证
+        if fingerprint_success:
+            print("检测到指纹识别成功，指纹线程自动退出。")
+            exit_event.set()
+            return
+        
+        led_control.led_waiting()
+        fingerprint_status = fingerprint_reader.get_fingerprint_detail()
+
+        if fingerprint_status:
+            print('指纹验证成功')
+            led_control.led_success()
+            buzzer_control.buzzer_success()
+            servo_control.unlock()
+            fingerprint_success = True
+            return
 
 try:
     rfid_thread = threading.Thread(target=rfid_authentication)
