@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { useHistory } from '../hooks/useHistory';
-import Button from './Button';
+import React, { useEffect, useState } from "react";
+import { useHistory } from "../hooks/useHistory";
+import Button from "./Button";
 
 const History = ({ onClose }) => {
   const { logs, loading, error, fetchLogs } = useHistory();
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     fetchLogs();
@@ -12,32 +12,36 @@ const History = ({ onClose }) => {
 
   const filterLogs = (logs) => {
     if (!logs) return [];
-    if (filter === 'all') return logs;
-    return logs.filter(log => log.type === filter);
+    if (filter === "all") return logs;
+    return logs.filter((log) => log.type === filter);
   };
 
   return (
     <div className="sidebar-content">
       <div className="sidebar-header">
+        <div className="header-actions">
+          <button 
+            className="history-button"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
         <h2>Access History</h2>
         <div className="header-actions">
-          <Button 
+          <button 
+            className="history-button"
             onClick={fetchLogs}
-            text="Refresh"
-            variant="secondary"
             disabled={loading}
-          />
-          <Button 
-            onClick={onClose}
-            text="Close"
-            variant="secondary"
-          />
+          >
+            Refresh
+          </button>
         </div>
       </div>
 
       <div className="filter-controls">
-        <select 
-          value={filter} 
+        <select
+          value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="select"
           disabled={loading || !logs?.length}
@@ -53,11 +57,7 @@ const History = ({ onClose }) => {
       {error && (
         <div className="error-message">
           <p>{error}</p>
-          <Button 
-            onClick={fetchLogs}
-            text="Try Again"
-            variant="primary"
-          />
+          <Button onClick={fetchLogs} text="Try Again" variant="primary" />
         </div>
       )}
 
@@ -74,9 +74,11 @@ const History = ({ onClose }) => {
               </div>
             ) : (
               filterLogs(logs).map((log) => (
-                <div 
-                  key={log.id} 
-                  className={`log-entry ${log.success ? 'status-success' : 'status-error'}`}
+                <div
+                  key={log.id}
+                  className={`log-entry ${
+                    log.success ? "status-success" : "status-error"
+                  }`}
                 >
                   <div className="log-header">
                     <span className="log-type">{log.type}</span>

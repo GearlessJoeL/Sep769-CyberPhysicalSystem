@@ -1,41 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { usePubNub } from 'pubnub-react';
-import { CHANNEL } from '../index';
+import PubNub from 'pubnub';
 
 const RecognitionResult = ({ type }) => {
-  const [status, setStatus] = useState(null);
-  const pubnub = usePubNub();
+  const [lastActivity, setLastActivity] = useState(null);
 
   useEffect(() => {
-    const handleMessage = (event) => {
-      const message = event.message;
-      if (message.type === type) {
-        setStatus({
-          success: message.state === 1,
-          name: message.name,
-          time: message.time
-        });
-      }
-    };
+    const pubnub = new PubNub({
+      subscribeKey: 'sub-c-a6797b99-e665-4db1-b0ec-2cb77ad995ed',
+      uuid: '321'
+    });
 
-    pubnub.addListener({ message: handleMessage });
+    pubnub.subscribe({
+      channels: ['MingyiHUO728']
+    });
+
+    pubnub.addListener({
+      message: (msg) => {
+        if (msg.message.message_type === 'status' && msg.message.type === type) {
+          setLastActivity({
+            name: msg.message.name,
+            time: new Date(msg.message.time * 1000).toLocaleString(),
+            state: msg.message.state
+          });
+        }
+      }
+    });
 
     return () => {
-      pubnub.removeListener({ message: handleMessage });
+      pubnub.unsubscribe({
+        channels: ['MingyiHUO728']
+      });
     };
-  }, [pubnub, type]);
+  }, [type]);
 
   return (
-    <div className={`status-container ${status?.success ? 'status-success' : 'status-error'}`}>
-      {status ? (
+    <div className="recognition-result">
+      {lastActivity ? (
         <>
-          <div className="status-text">
-            {status.success ? 'Authentication Successful' : 'Waiting for authentication...'}
-          </div>
-          {status.name && <div className="user-name">{status.name}</div>}
+          <p className="name">{lastActivity.name}</p>
+          <p className="time">{lastActivity.time}</p>
+          <p className="status">
+            {lastActivity.state === 1 ? 'Unlocked' : 'Locked'}
+          </p>
         </>
       ) : (
-        <div className="status-text">Waiting for authentication...</div>
+        <p>No recent activity</p>
       )}
     </div>
   );
