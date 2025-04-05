@@ -48,8 +48,8 @@ const History = ({ onClose }) => {
         >
           <option value="all">All Activities</option>
           <option value="facial">Facial Recognition</option>
-          <option value="fingerprint">Fingerprint</option>
           <option value="nfc">NFC</option>
+          <option value="remote">Remote Control</option>
           <option value="manual">Manual Unlock</option>
         </select>
       </div>

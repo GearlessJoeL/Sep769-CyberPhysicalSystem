@@ -21,6 +21,16 @@ pubnub.subscribe({
   channels: [CHANNEL]
 });
 
+// Add listener for remote control events
+pubnub.addListener({
+  message: (event) => {
+    if (event.message.type === 'remote') {
+      // Handle remote control events
+      console.log('Remote control action:', event.message);
+    }
+  }
+});
+
 ReactDOM.render(
   <React.StrictMode>
     <PubNubProvider client={pubnub}>

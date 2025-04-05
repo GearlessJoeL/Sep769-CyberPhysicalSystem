@@ -104,6 +104,14 @@ body {
   border-left: 4px solid #dc3545;
 }
 
+.status.success {
+  color: #2e7d32;
+}
+
+.status.error {
+  color: #c62828;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

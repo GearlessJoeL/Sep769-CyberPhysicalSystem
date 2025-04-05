@@ -33,10 +33,16 @@ function App() {
               <RecognitionResult type="face" />
             </div>
           </div>
-          <div className="recognition-section">
+          {/* <div className="recognition-section">
             <h2>Fingerprint Recognition</h2>
             <div className="status-display">
               <RecognitionResult type="fingerprint" />
+            </div>
+          </div> */}
+          <div className="recognition-section">
+            <h2>Remote Control</h2>
+            <div className="status-display">
+              <RecognitionResult type="remote" />
             </div>
           </div>
         </div>
