@@ -1,51 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import PubNub from 'pubnub';
+import React, { useState } from 'react';
+import { usePubNub } from 'pubnub-react';
+import { getChannel } from '../utils/pubnub-config';
 
 const RecognitionResult = ({ type }) => {
   const [lastActivity, setLastActivity] = useState(null);
+  const pubnub = usePubNub();
 
-  const formatMessage = (type, data) => {
-    switch (type) {
-      case 'remote':
-        return {
-          name: 'Remote Access',
-          message: data.state === 1 ? 'Door unlocked remotely' : 'Door locked remotely',
-          timestamp: new Date(data.time * 1000).toLocaleString()
-        };
-      // ... other cases
-      default:
-        return null;
-    }
-  };
+  React.useEffect(() => {
+    const channel = getChannel();
 
-  useEffect(() => {
-    const pubnub = new PubNub({
-      subscribeKey: 'sub-c-a6797b99-e665-4db1-b0ec-2cb77ad995ed',
-      uuid: '321'
-    });
-
-    pubnub.subscribe({
-      channels: ['MingyiHUO728']
-    });
-
-    pubnub.addListener({
-      message: (msg) => {
-        if (msg.message.message_type === 'status' && msg.message.type === type) {
-          setLastActivity({
-            name: msg.message.name,
-            time: new Date(msg.message.time * 1000).toLocaleString(),
-            state: msg.message.state
-          });
-        }
+    const handleMessage = (msg) => {
+      if (msg.message.message_type === 'status' && msg.message.type === type) {
+        setLastActivity({
+          name: msg.message.name,
+          time: new Date(msg.message.time * 1000).toLocaleString(),
+          state: msg.message.state
+        });
       }
-    });
+    };
+
+    pubnub.subscribe({ channels: [channel] });
+    pubnub.addListener({ message: handleMessage });
 
     return () => {
-      pubnub.unsubscribe({
-        channels: ['MingyiHUO728']
-      });
+      pubnub.removeListener({ message: handleMessage });
+      pubnub.unsubscribe({ channels: [channel] });
     };
-  }, [type]);
+  }, [pubnub, type]);
 
   return (
     <div className="recognition-result">

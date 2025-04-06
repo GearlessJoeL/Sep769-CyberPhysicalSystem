@@ -1,32 +1,59 @@
 import { useState, useCallback, useEffect } from 'react';
 import { usePubNub } from 'pubnub-react';
-import { CHANNEL } from '../index';
+import { getChannel } from '../utils/pubnub-config';
 
 export const useHistory = () => {
     const pubnub = usePubNub();
+    const channel = getChannel();
+    const [history, setHistory] = useState([]);
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    const getActivityName = (message) => {
+        if (message.state === 0) {
+            switch (message.type) {
+                case 'remote':
+                    return 'Remote Access';
+                case 'rfid':
+                    return 'RFID Card';
+                case 'face':
+                    return 'Face Recognition';
+                case 'fingerprint':
+                    return 'Fingerprint';
+                default:
+                    return 'Unknown';
+            }
+        }
+        return message.name || 'Unknown';
+    };
 
     const fetchLogs = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
             const result = await pubnub.history({
-                channel: CHANNEL,
+                channel: channel,
                 count: 100,
                 stringifiedTimeToken: true
             });
 
-            const formattedLogs = result.messages.map(item => ({
-                id: item.timetoken,
-                timestamp: new Date(parseInt(item.timetoken / 10000)).toISOString(),
-                type: item.entry?.type || item.message?.type,
-                success: item.entry?.success || item.message?.success,
-                message: item.entry?.message || item.message?.message,
-                userId: item.entry?.userId || item.message?.userId,
-                ...(item.entry || item.message)
-            }));
+            const formattedLogs = result.messages.map(item => {
+                const message = item.entry || item.message;
+                const activityStatus = message.state === 1 ? 'Access Granted' : 'Access Denied';
+                const activityName = getActivityName(message);
+                const activityType = message.type || 'Unknown';
+
+                return {
+                    id: item.timetoken,
+                    timestamp: new Date(parseInt(item.timetoken / 10000)).toISOString(),
+                    type: activityType,
+                    success: message.state === 1,
+                    message: `${activityType} - ${activityStatus}`,
+                    name: activityName,
+                    state: message.state
+                };
+            });
 
             setLogs(formattedLogs);
         } catch (error) {
@@ -35,15 +62,24 @@ export const useHistory = () => {
         } finally {
             setLoading(false);
         }
-    }, [pubnub]);
+    }, [pubnub, channel]);
 
     useEffect(() => {
         const handleMessage = (event) => {
-            if (event.channel === CHANNEL && event.message.type === 'ACCESS_LOG') {
+            if (event.channel === channel && event.message.message_type === 'status') {
+                const message = event.message;
+                const activityStatus = message.state === 1 ? 'Access Granted' : 'Access Denied';
+                const activityName = getActivityName(message);
+                const activityType = message.type || 'Unknown';
+
                 setLogs(prevLogs => [{
                     id: event.timetoken,
                     timestamp: new Date(parseInt(event.timetoken / 10000)).toISOString(),
-                    ...event.message
+                    type: activityType,
+                    success: message.state === 1,
+                    message: `${activityType} - ${activityStatus}`,
+                    name: activityName,
+                    state: message.state
                 }, ...prevLogs]);
             }
         };
@@ -58,7 +94,7 @@ export const useHistory = () => {
         return () => {
             pubnub.removeListener({ message: handleMessage });
         };
-    }, [pubnub, fetchLogs]);
+    }, [pubnub, fetchLogs, channel]);
 
     const clearLogs = useCallback(() => {
         setLogs([]);

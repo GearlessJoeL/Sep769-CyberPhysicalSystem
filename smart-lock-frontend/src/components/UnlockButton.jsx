@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { usePubNub } from 'pubnub-react';
-import { CHANNEL } from '../index';
+import { getChannel } from '../utils/pubnub-config';
 
 const UnlockButton = () => {
-  const pubnub = usePubNub();
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const pubnub = usePubNub();
 
   const handleUnlock = async () => {
     setIsUnlocking(true);
+    const channel = getChannel();
+
     try {
       await pubnub.publish({
-        channel: CHANNEL,
+        channel,
         message: {
           message_type: "control",
           action: "unlock",
@@ -25,13 +27,15 @@ const UnlockButton = () => {
   };
 
   return (
-    <button 
-      onClick={handleUnlock}
-      disabled={isUnlocking}
-      className="unlock-button"
-    >
-      {isUnlocking ? 'Unlocking...' : 'Unlock Door'}
-    </button>
+    <div className="unlock-container">
+      <button 
+        onClick={handleUnlock}
+        disabled={isUnlocking}
+        className="unlock-button"
+      >
+        {isUnlocking ? 'Unlocking...' : 'Unlock Door'}
+      </button>
+    </div>
   );
 };
 
