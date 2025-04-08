@@ -13,17 +13,21 @@ from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
 import queue
 import json
+import os
+from dotenv import load_dotenv
 
+
+load_dotenv()
 # PubNub Configuration
 pnconfig = PNConfiguration()
-pnconfig.subscribe_key = 'sub-c-a6797b99-e665-4db1-b0ec-2cb77ad995ed'
-pnconfig.publish_key = 'pub-c-e478cfb1-92ef-4faa-93cc-d1c4022ecb19'
-pnconfig.uuid = '321'
+pnconfig.subscribe_key = os.getenv('PYTHON_PUBNUB_SUBSCRIBE_KEY')
+pnconfig.publish_key = os.getenv('PYTHON_PUBNUB_PUBLISH_KEY')
+pnconfig.uuid = os.getenv('PYTHON_PUBNUB_UUID')
 pubnub = PubNub(pnconfig)
 
 # Channel names
-CONTROL_CHANNEL = "MingyiHUO728"
-STATUS_CHANNEL = "MingyiHUO728"
+CONTROL_CHANNEL = os.getenv('PYTHON_PUBNUB_CONTROL_CHANNEL')
+STATUS_CHANNEL =  os.getenv('PYTHON_PUBNUB_STATUS_CHANNEL')
 
 # Initialize GPIO mode
 GPIO.setwarnings(False)
