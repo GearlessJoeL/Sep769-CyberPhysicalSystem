@@ -7,4 +7,5 @@ Clone the code to your Raspberry Pi, set up all dependencies, and run Main_contr
 
 ### Front end
 In the smart lock front end folder, first set up your own PubNub keys and channels in the file `.env`.
+
 After that, run `npm install` and then run `npm run dev` to start the front-end page on your pc.
