@@ -21,7 +21,7 @@ class FaceRecognition:
 
 
 KNOWN_FACES = {
-    1: "person1",
+    1: "Liu Sonming",
     2: "person2",
     3: "person3",
     4: "person4"

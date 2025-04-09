@@ -1,15 +1,18 @@
 import RPi.GPIO as GPIO
-from mfrc522 import SimpleMFRC522
+# from mfrc522 import SimpleMFRC522
 import time
 import threading
 
-reader = SimpleMFRC522()
+# reader = SimpleMFRC522()
 exit_event = threading.Event()  # 全局退出事件
 
 
 def read_rfid():
+    from mfrc522 import SimpleMFRC522
+    reader = SimpleMFRC522()
     try:
         print('请将RFID卡片放到读取器上...')
+        print(GPIO.getmode())
 
         while not exit_event.is_set():  # 检查退出事件
             id, text = reader.read_no_block()  # 改为非阻塞读取方法
@@ -26,5 +29,5 @@ def read_rfid():
         print(f"RFID 读取错误: {e}")
         return None
 
-    finally:
-        GPIO.cleanup()
+#     finally:
+#         GPIO.cleanup()
