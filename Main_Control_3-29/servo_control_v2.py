@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import time
 
 # 引脚定义
-SERVO_PIN = 12  # 物理引脚位置 (BOARD 模式下的 Pin 12)
+SERVO_PIN = 24  # GPIO24 (BCM 模式)
 
 servo = None  # 全局变量，伺服电机的 PWM 对象
 servo_initialized = False  # 引脚初始化状态变量
@@ -16,9 +16,9 @@ def init_servo():
         servo = GPIO.PWM(SERVO_PIN, 50)  # 初始化 PWM (50Hz)
      
     if GPIO.getmode() is None:
-        GPIO.setmode(GPIO.BOARD)
-    elif GPIO.getmode() == GPIO.BCM:
-        raise RuntimeError('GPIO 模式已被设置为 BCM，与 BOARD 不兼容。')
+        GPIO.setmode(GPIO.BCM)
+    elif GPIO.getmode() == GPIO.BOARD:
+        raise RuntimeError('GPIO 模式已被设置为 BOARD，与 BCM 不兼容。')
 
     GPIO.setwarnings(False)
     GPIO.setup(SERVO_PIN, GPIO.OUT)
