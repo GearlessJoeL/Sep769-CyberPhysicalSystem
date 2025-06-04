@@ -4,7 +4,6 @@ import rfid_reader_v2 as rfid_reader
 import led_control_v2 as led_control
 import buzzer_control_v3 as buzzer_control
 import servo_control_v2 as servo_control
-import fingerprint_reader_v2 as fingerprint_reader
 import threading
 from rfid_reader_v2 import exit_event
 from face_recog import FaceRecognition
@@ -13,21 +12,17 @@ from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
 import queue
 import json
-import os
-from dotenv import load_dotenv
 
-
-load_dotenv()
 # PubNub Configuration
 pnconfig = PNConfiguration()
-pnconfig.subscribe_key = os.getenv('PYTHON_PUBNUB_SUBSCRIBE_KEY')
-pnconfig.publish_key = os.getenv('PYTHON_PUBNUB_PUBLISH_KEY')
-pnconfig.uuid = os.getenv('PYTHON_PUBNUB_UUID')
+pnconfig.subscribe_key = 'sub-c-a6797b99-e665-4db1-b0ec-2cb77ad995ed'
+pnconfig.publish_key = 'pub-c-e478cfb1-92ef-4faa-93cc-d1c4022ecb19'
+pnconfig.uuid = '321'
 pubnub = PubNub(pnconfig)
 
 # Channel names
-CONTROL_CHANNEL = os.getenv('PYTHON_PUBNUB_CONTROL_CHANNEL')
-STATUS_CHANNEL =  os.getenv('PYTHON_PUBNUB_STATUS_CHANNEL')
+CONTROL_CHANNEL = "MingyiHUO728"
+STATUS_CHANNEL = "MingyiHUO728"
 
 # Initialize GPIO mode
 GPIO.setwarnings(False)
@@ -38,8 +33,8 @@ face = FaceRecognition()
 
 rfid_success = False
 face_success = False
-fingerprint_success = False
 remote_unlock = False
+card = None
 
 class MySubscribeCallback(SubscribeCallback):
     def message(self, pubnub, message):
@@ -49,26 +44,6 @@ class MySubscribeCallback(SubscribeCallback):
                 remote_unlock = True
                 print("message received")
 
-                
-#                 # Publish status update
-#                 status_data = {
-#                     "message_type": "status",
-#                     "state": 1,
-#                     "type": "remote",
-#                     "time": time.time(),
-#                     "name": "Remote Access"
-#                 }
-#                 publish_status(status_data)
-#                 
-#                 # Auto-lock after 5 seconds
-#                 time.sleep(5)
-#                 servo_control.lock()
-#                 
-#                 # Update locked status
-#                 status_data["state"] = 0
-#                 status_data["time"] = time.time()
-#                 publish_status(status_data)
-
 pubnub.add_listener(MySubscribeCallback())
 pubnub.subscribe().channels([CONTROL_CHANNEL]).execute()
 
@@ -77,28 +52,36 @@ def publish_status(status_data):
     pubnub.publish().channel(STATUS_CHANNEL).message(status_data).sync()
 
 def rfid_authentication():
-    global rfid_success
-    while not rfid_success and not face_success and not remote_unlock and not fingerprint_success:
-        if face_success or remote_unlock or fingerprint_success:
-            print("Face or fingerprint recognition succeeded or remote unlock activated, RFID thread exiting.")
+    global rfid_success, card
+    while not rfid_success and not face_success and not remote_unlock:
+        if face_success or remote_unlock:
+            print("Face recognition succeeded or remote unlock activated, RFID thread exiting.")
             exit_event.set()
             return
 
         led_control.led_waiting()
         card_id = rfid_reader.read_rfid()
+        print(card_id)
 
-        if card_id == '860338929300':
-            print('RFID verification successful')
-            led_control.led_success()
-            buzzer_control.buzzer_success()
-            servo_control.unlock()
+        if card_id != None:
             rfid_success = True
+            card = card_id
+            if card_id == '860338929300':
+                print('RFID verification successful')
+                led_control.led_success()
+                buzzer_control.buzzer_success()
+                servo_control.unlock()
+                
+            else:
+                print('fake card!')
+                
             return
 
 
 def remote_authentication():
     global remote_unlock
     while not rfid_success and not face_success and not remote_unlock:
+        time.sleep(0.5)
         if remote_unlock == True:
             print("Received remote unlock command")
             led_control.led_success()
@@ -111,8 +94,9 @@ def remote_authentication():
 
 def face_authentication():
     global face_success
+    fail_count = 0
     print('please face the camera...')
-    while not rfid_success and not face_success and not remote_unlock and not fingerprint_success:
+    while not rfid_success and not face_success and not remote_unlock:
         face.recognize()
         time.sleep(0.5)
         if face.get_name() != "":
@@ -137,25 +121,6 @@ def face_authentication():
                 exit_event.set()
 #                 print("ex")
                 return
-
-def fingerprint_authentication():
-    global fingerprint_success
-    while not fingerprint_success and not rfid_success and not face_success and not remote_unlock: # 循环等待验证
-        if fingerprint_success:
-            print("检测到指纹识别成功，指纹线程自动退出。")
-            exit_event.set()
-            return
-        
-        led_control.led_waiting()
-        fingerprint_status = fingerprint_reader.get_fingerprint_detail()
-
-        if fingerprint_status:
-            print('指纹验证成功')
-            led_control.led_success()
-            buzzer_control.buzzer_success()
-            servo_control.unlock()
-            fingerprint_success = True
-            return
 
 try:
     rfid_thread = threading.Thread(target=rfid_authentication)
@@ -183,7 +148,8 @@ try:
             status_data["name"] = face.get_name()
         elif rfid_success:
             status_data["type"] = "rfid"
-            status_data["name"] = "Key"
+            status_data["name"] = card
+            status_data["state"] = 1 if card == '860338929300' else  0 
         elif remote_unlock:
             status_data["type"] = "remote"
             status_data["name"] = "Remote Access"
@@ -194,6 +160,9 @@ try:
             status_data["type"] = "unknown"
             status_data["name"] = "Unknown"
 
+        status_data["time"] = time.time()
+        publish_status(status_data)
+        
         print("The door will lock in 5 seconds!")
         time.sleep(5)
         
@@ -202,11 +171,13 @@ try:
         
         # Publish locked status
         status_data["state"] = 0
-        status_data["time"] = time.time()
-        publish_status(status_data)
+
         
         time.sleep(0.1)
         print("The door has been locked!")
+
+
+
 
 except KeyboardInterrupt:
     print('Program interrupted. Cleaning up GPIO settings...')
