@@ -50,7 +50,7 @@ const Dashboard = () => {
               <RecognitionResult type="rfid" />
             </div>
           </div>
-          <div className="recognition-section">
+          {/* <div className="recognition-section">
             <h2>Face Recognition</h2>
             <div className="status-display">
               <RecognitionResult type="face" />
@@ -61,7 +61,7 @@ const Dashboard = () => {
             <div className="status-display">
               <RecognitionResult type="fingerprint" />
             </div>
-          </div>
+          </div> */}
         </div>
 
         {showHistory && (
