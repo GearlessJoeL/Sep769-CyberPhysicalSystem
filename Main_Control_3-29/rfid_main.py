@@ -39,6 +39,29 @@ class MySubscribeCallback(SubscribeCallback):
             if message.message.get('message_type') == "control" and message.message.get('action') == 'unlock':
                 remote_unlock = True
                 print("Remote unlock command received")
+                # Handle remote unlock immediately
+                servo_control.unlock()
+                publish_status({
+                    "state": 1,
+                    "type": "remote",
+                    "time": time.time(),
+                    "name": "Remote Access"
+                })
+                # Start a timer thread to lock after 5 seconds
+                lock_timer = threading.Timer(5.0, delayed_lock)
+                lock_timer.start()
+
+def delayed_lock():
+    servo_control.lock()
+    publish_status({
+        "state": 0,
+        "type": "remote",
+        "time": time.time(),
+        "name": "Remote Access"
+    })
+    print("The door has been locked!")
+    global remote_unlock
+    remote_unlock = False
 
 pubnub.add_listener(MySubscribeCallback())
 pubnub.subscribe().channels([CONTROL_CHANNEL]).execute()
@@ -78,21 +101,20 @@ try:
         rfid_thread.start()
         rfid_thread.join()
 
-        if (rfid_success and card == '860338929300') or remote_unlock:
+        if rfid_success and card == '860338929300':
             print("The door will lock in 5 seconds!")
             time.sleep(5)
             servo_control.lock()
             publish_status({
                 "state": 0,
-                "type": "rfid" if rfid_success else "remote",
+                "type": "rfid",
                 "time": time.time(),
-                "name": card if rfid_success else "Remote Access"
+                "name": card
             })
             print("The door has been locked!")
         
         # Reset for next scan
         rfid_success = False
-        remote_unlock = False
         card = None
         time.sleep(1)
 
