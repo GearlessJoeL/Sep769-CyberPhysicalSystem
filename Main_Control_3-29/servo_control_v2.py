@@ -18,7 +18,7 @@ def init_servo():
     if GPIO.getmode() is None:
         GPIO.setmode(GPIO.BCM)
     elif GPIO.getmode() == GPIO.BOARD:
-        raise RuntimeError('GPIO 模式已被设置为 BOARD，与 BCM 不兼容。')
+        raise RuntimeError('GPIO Set Mode Error: Please use BCM mode.')
 
     GPIO.setwarnings(False)
     GPIO.setup(SERVO_PIN, GPIO.OUT)
@@ -29,7 +29,7 @@ def init_servo():
 
 def unlock():
     init_servo()
-    print("解锁中...")
+    print("Unlocking...")
     servo.ChangeDutyCycle(7.5)  # 转到 90 度 (解锁)
     time.sleep(2)
     servo.ChangeDutyCycle(0)
@@ -37,7 +37,7 @@ def unlock():
 
 def lock():
     init_servo()
-    print("锁定中...")
+    print("Locking...")
     servo.ChangeDutyCycle(2.5)  # 转到 0 度 (锁定)
     time.sleep(0.5)
     servo.ChangeDutyCycle(0)
@@ -50,9 +50,9 @@ def cleanup():
 
 if __name__ == '__main__':
     try:
-        print("解锁中...")
+        print("Unlocking...")
         unlock()
-        print("锁定中...")
+        print("Locking...")
         lock()
     finally:
         cleanup()
