@@ -1,5 +1,4 @@
-# Sep769
-SEP 769 Cyber Physical System
+# Sep769 Cyber Physical System
 
 ## Quick Start
 ### Back-end
