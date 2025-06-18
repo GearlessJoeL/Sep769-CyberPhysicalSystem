@@ -1,5 +1,5 @@
-# Sep728
-SEP 728 IoT System
+# Sep769
+SEP 769 Cyber Physical System
 
 ## Quick Start
 ### Back-end
